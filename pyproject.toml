@@ -1,0 +1,39 @@
+[project]
+name = "file-organizer-agent"
+version = "1.0.0"
+description = "Agentic File Organizer with LangGraph and FastAPI"
+authors = [{name = "Your Name", email = "your.email@example.com"}]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "langchain>=0.0.340",
+    "langgraph>=0.0.10",
+    "langsmith>=0.0.66",
+    "sqlalchemy>=2.0.23",
+    "redis>=5.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.3",
+    "black>=23.11.0",
+    "ruff>=0.1.6",
+    "mypy>=1.7.0",
+]
+docker = [
+    "docker>=6.1.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.black]
+line-length = 88
+target-version = ['py310']

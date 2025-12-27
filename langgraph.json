@@ -1,0 +1,99 @@
+{
+  "name": "file-organizer-agent",
+  "version": "0.1.0",
+  "description": "LangGraph configuration to run the File Organizer Agent and integrate with LangSmith for tracing/observability.",
+
+  "entrypoint": {
+    "module": "app.agents.file_organizer",
+    "class": "FileOrganizerAgent",
+    "run_method": "run",
+    "stream_method": "stream"
+  },
+
+  "python": {
+    "interpreter": "python",
+    "requires": [
+      "langchain>=0.0.340",
+      "langgraph>=0.0.10",
+      "langsmith>=0.0.66"
+    ]
+  },
+
+  "graph": {
+    "interrupt_before": ["act"],
+    "interrupt_after": ["remember"],
+    "checkpoint": {
+      "type": "MemorySaver",
+      "module": "langgraph.checkpoint",
+      "class": "MemorySaver"
+    },
+    "prebuilt_tools": ["tools_condition"],
+    "state_class": "app.agents.state.AgentState"
+  },
+
+  "graphs": {
+    "file_organizer": {
+      "entrypoint": {
+        "module": "app.agents.file_organizer",
+        "class": "FileOrganizerAgent",
+        "run_method": "run",
+        "stream_method": "stream"
+      },
+      "graph": {
+        "interrupt_before": ["act"],
+        "interrupt_after": ["remember"],
+        "checkpoint": {
+          "type": "MemorySaver",
+          "module": "langgraph.checkpoint",
+          "class": "MemorySaver"
+        },
+        "prebuilt_tools": ["tools_condition"],
+        "state_class": "app.agents.state.AgentState"
+      },
+      "models": ["default"]
+    }
+  },
+
+  "models": {
+    "default": {
+      "provider": "openai",
+      "model": "gpt-4-turbo-preview",
+      "api_key_env": "OPENAI_API_KEY",
+      "options": {
+        "temperature": 0.1,
+        "max_tokens": 200
+      }
+    }
+  },
+
+  "observability": {
+    "tracing": {
+      "provider": "langsmith",
+      "enabled_env": "LANGSMITH_TRACING",
+      "api_key_env": "LANGSMITH_API_KEY",
+      "project_env": "LANGSMITH_PROJECT",
+      "endpoint_env": "LANGSMITH_ENDPOINT",
+      "default_project": "file-organizer-agent"
+    }
+  },
+
+  "memory": {
+    "ttl_seconds": 86400
+  },
+
+  "env": {
+    "OPENAI_MODEL": "gpt-4-turbo-preview",
+    "OPENAI_API_KEY": "",
+    "LANGSMITH_API_KEY": "",
+    "LANGSMITH_PROJECT": "file-organizer-agent",
+    "LANGSMITH_TRACING": "true",
+    "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com"
+  },
+
+  "examples": {
+    "run_local": "python -c \"from app.agents.file_organizer import FileOrganizerAgent; import asyncio; a=FileOrganizerAgent(); print(asyncio.run(a.run('/path/to/dir')))\"",
+    "stream_local": "python -c \"from app.agents.file_organizer import FileOrganizerAgent; import asyncio; a=FileOrganizerAgent(); async def s():\n  async for e in a.stream('/path/to/dir'): print(e)\n  ;\n asyncio.run(s())\""
+  },
+
+  "notes": "Set OPENAI_API_KEY and LANGSMITH_API_KEY in environment variables or in .env. When LANGSMITH_TRACING is true and LANGSMITH_API_KEY is set, traces will be sent to LangSmith under the project defined by LANGSMITH_PROJECT. Use the 'entrypoint' to run or stream agent sessions programmatically."
+}

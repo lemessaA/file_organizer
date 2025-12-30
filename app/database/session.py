@@ -3,7 +3,7 @@ Database session management using SQLModel.
 """
 from typing import Generator
 from sqlmodel import SQLModel, create_engine, Session
-from sqlmodel.pool import QueuePool
+from sqlalchemy.pool import QueuePool
 
 from app.core.config import settings
 

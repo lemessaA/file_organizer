@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     DEBUG:bool = False
     SECRET_KEY: str = Field(default="")
+    LOG_LEVEL: str = "INFO"
     OPENAI_MODEL: str = "gpt-4-turbo-preview"
     
     # Langsmith 

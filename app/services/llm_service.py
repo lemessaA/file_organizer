@@ -4,9 +4,9 @@ LLM service for file classification.
 from typing import Dict, List, Optional, Tuple
 import json
 from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from langchain.output_parsers import PydanticOutputParser
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.core.config import settings
 from app.models.schemas import ClassificationResult, FileCategory

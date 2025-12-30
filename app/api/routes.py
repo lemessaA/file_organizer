@@ -137,26 +137,26 @@ async def run_agent_session(
 ):
     """Run agent session and update database."""
     try:
-        # Update session status
+        # Query database for the session record
         db_session = db.query(AgentSessionDB).filter(
-            AgentSessionDB.session_id == session_id
-        ).first()
+            AgentSessionDB.session_id == session_id # Find session by ID
+        ).first() # Getting first mathcing record
         
         if not db_session:
             logger.error(f"Session not found: {session_id}")
             return
-        
+        #Update session to RUNNING 
         db_session.status = AgentStatus.RUNNING
         db.commit()
         
-        # Run agent
+        # Run Actual agent with provided directory and config
         result = await agent.run(directory, config)
         
-        # Update session with result
+        # Update session with result from agent execution
         db_session.status = AgentStatus.COMPLETED
         db_session.completed_at = datetime.now()
         db_session.files_processed = result.get("files_processed", 0)
-        db_session.files_organized = result.get("files_organized", 0)
+        db_session.files_organized = result.get("files_organized", 0) #number of files actually organized
         db_session.errors = result.get("errors", 0)
         db_session.result = result
         
@@ -172,6 +172,7 @@ async def run_agent_session(
             AgentSessionDB.session_id == session_id
         ).first()
         
+        # If session exists, update it with failure status
         if db_session:
             db_session.status = AgentStatus.FAILED
             db_session.completed_at = datetime.now()
@@ -186,7 +187,7 @@ async def run_agent_session(
 @router.get("/sessions/{session_id}/status", response_model=SessionStatus)
 async def get_session_status(
     session_id: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db) # Inject database session
 ):
     """Get status of a session."""
     db_session = db.query(AgentSessionDB).filter(
@@ -196,7 +197,7 @@ async def get_session_status(
     if not db_session:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    # Calculate progress
+    # Calculate progress percentage
     progress = 0.0
     if db_session.files_processed > 0 and db_session.result:
         total = db_session.result.get("total_files", db_session.files_processed)

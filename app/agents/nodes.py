@@ -1,7 +1,7 @@
 """
 Nodes for LangGraph agent.
 """
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
 import hashlib
 from pathlib import Path

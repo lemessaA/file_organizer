@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict
 from sqlmodel import SQLModel, Field, Relationship, JSON
+from sqlalchemy import Column, Enum
 from datetime import datetime
 import enum
 
@@ -30,7 +31,7 @@ class AgentSessionDB(SQLModel, table=True):
     use_llm: bool = Field(default=True)
     started_at: datetime = Field(default_factory=datetime.utcnow)
     completed_at: Optional[datetime] = None
-    result: Optional[Dict] = Field(default=None, sa_column=Field(default=None))
+    result: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
     error_message: Optional[str] = None
 
     # Relationships
@@ -43,7 +44,7 @@ class MemoryDecisionDB(SQLModel, table=True):
     filename: str = Field(nullable=False, max_length=500, index=True)
     original_path: str = Field(nullable=False)
     target_path: str = Field(nullable=False)
-    category: FileCategoryEnum = Field(nullable=False, sa_column_kwargs={"type_": "ENUM"})
+    category: FileCategoryEnum = Field(sa_column=Column(Enum(FileCategoryEnum)))
     decision_source: str = Field(nullable=False, max_length=50)  # extension, llm, memory, user
     confidence: float = Field(default=1.0)
     session_id: Optional[str] = Field(default=None, foreign_key="agentsessiondb.session_id")
@@ -58,7 +59,7 @@ class FilePatternRuleDB(SQLModel, table=True):
     """Database model for file pattern rules."""
     id: Optional[int] = Field(default=None, primary_key=True)
     pattern: str = Field(nullable=False, max_length=255)
-    category: FileCategoryEnum = Field(nullable=False, sa_column_kwargs={"type_": "ENUM"})
+    category: FileCategoryEnum = Field(sa_column=Column(Enum(FileCategoryEnum)))
     priority: int = Field(default=0)
     is_regex: bool = Field(default=False)
     created_by: Optional[str] = Field(default=None, max_length=255)
@@ -70,8 +71,8 @@ class AgentConfigurationDB(SQLModel, table=True):
     """Database model for agent configuration."""
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True, nullable=False, max_length=255)
-    categories: Dict = Field(nullable=False, sa_column=Field(default=None))
-    ignore_patterns: Optional[Dict] = Field(default=None)
+    categories: Dict = Field(sa_column=Column(JSON))
+    ignore_patterns: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
     max_file_size: int = Field(default=100 * 1024 * 1024)  # 100MB
     default_confidence_threshold: float = Field(default=0.7)
     created_at: datetime = Field(default_factory=datetime.utcnow)

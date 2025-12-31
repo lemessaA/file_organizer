@@ -5,9 +5,8 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 import json
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc
+from sqlalchemy import and_, or_, desc, func
 
-from app.database.session import get_redis
 from app.models.database import MemoryDecisionDB, AgentSessionDB, FileCategoryEnum
 from app.models.schemas import MemoryDecision, FileCategory
 from app.utils.logging import get_logger
@@ -16,12 +15,10 @@ logger = get_logger(__name__)
 
 
 class MemoryService:
-    """Service for decision memory with Redis cache and database persistence."""
+    """Service for decision memory with database persistence."""
     
     def __init__(self, db_session: Session):
         self.db = db_session
-        self.redis = get_redis()
-        self.cache_ttl = timedelta(hours=24)
     
     def remember(
         self,
@@ -48,7 +45,7 @@ class MemoryService:
         Returns:
             MemoryDecision object
         """
-        # Create database record
+        # Store in database only
         db_decision = MemoryDecisionDB(
             filename=filename,
             original_path=original_path,
@@ -62,25 +59,6 @@ class MemoryService:
         self.db.add(db_decision)
         self.db.commit()
         self.db.refresh(db_decision)
-        
-        # Cache in Redis
-        cache_key = f"decision:{filename}"
-        decision_data = {
-            "filename": filename,
-            "original_path": original_path,
-            "target_path": target_path,
-            "category": category.value,
-            "decision_source": decision_source,
-            "confidence": confidence,
-            "session_id": session_id,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        self.redis.setex(
-            cache_key,
-            int(self.cache_ttl.total_seconds()),
-            json.dumps(decision_data)
-        )
         
         # Convert to schema
         decision = MemoryDecision(
@@ -107,42 +85,12 @@ class MemoryService:
         Returns:
             MemoryDecision or None
         """
-        # Try cache first
-        cache_key = f"decision:{filename}"
-        cached = self.redis.get(cache_key)
-        
-        if cached:
-            try:
-                data = json.loads(cached)
-                return MemoryDecision(**data)
-            except (json.JSONDecodeError, ValueError):
-                # Cache corrupted, fall back to database
-                pass
-        
-        # Query database
+        # Query database directly
         db_decision = self.db.query(MemoryDecisionDB).filter(
             MemoryDecisionDB.filename == filename
         ).order_by(desc(MemoryDecisionDB.created_at)).first()
         
         if db_decision:
-            # Update cache
-            decision_data = {
-                "filename": db_decision.filename,
-                "original_path": db_decision.original_path,
-                "target_path": db_decision.target_path,
-                "category": db_decision.category.value,
-                "decision_source": db_decision.decision_source,
-                "confidence": db_decision.confidence,
-                "session_id": db_decision.session_id,
-                "timestamp": db_decision.created_at.isoformat()
-            }
-            
-            self.redis.setex(
-                cache_key,
-                int(self.cache_ttl.total_seconds()),
-                json.dumps(decision_data)
-            )
-            
             # Convert to schema
             return MemoryDecision(
                 filename=db_decision.filename,
@@ -215,10 +163,6 @@ class MemoryService:
         if deleted:
             self.db.commit()
             
-            # Remove from cache
-            cache_key = f"decision:{filename}"
-            self.redis.delete(cache_key)
-            
             logger.info(f"Forgot decision for {filename}")
             return True
         
@@ -257,25 +201,6 @@ class MemoryService:
             db_decision.target_path = new_target
         
         self.db.commit()
-        
-        # Update cache
-        cache_key = f"decision:{filename}"
-        decision_data = {
-            "filename": db_decision.filename,
-            "original_path": db_decision.original_path,
-            "target_path": db_decision.target_path,
-            "category": db_decision.category.value,
-            "decision_source": db_decision.decision_source,
-            "confidence": db_decision.confidence,
-            "session_id": db_decision.session_id,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        self.redis.setex(
-            cache_key,
-            int(self.cache_ttl.total_seconds()),
-            json.dumps(decision_data)
-        )
         
         return MemoryDecision(
             filename=db_decision.filename,
@@ -337,7 +262,5 @@ class MemoryService:
             "recent_decisions": recent,
             "category_distribution": category_counts,
             "decision_sources": source_counts,
-            "average_confidence": float(avg_confidence),
-            "cache_hits": self.redis.info()['keyspace_hits'],
-            "cache_misses": self.redis.info()['keyspace_misses']
+            "average_confidence": float(avg_confidence)
         }

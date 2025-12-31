@@ -16,7 +16,7 @@ class AgentStatus(str, Enum):
 
 
 class OrganizeRequest(BaseModel):
-    """Request to organize a directory."""
+    """ Request to organize a directory."""
     directory: str = Field(..., description="Directory path to organize")
     recursive: bool = Field(True, description="Scan recursively")
     dry_run: bool = Field(False, description="Dry run mode")
@@ -45,7 +45,7 @@ class OrganizeResponse(BaseModel):
 
 
 class SessionStatus(BaseModel):
-    """Session status."""
+    """ Session status."""
     session_id: str
     status: AgentStatus
     directory: str
@@ -82,8 +82,6 @@ class MemoryStats(BaseModel):
     category_distribution: Dict[str, int]
     decision_sources: Dict[str, int]
     average_confidence: float
-    cache_hits: int
-    cache_misses: int
 
 
 class UpdateDecisionRequest(BaseModel):
@@ -99,7 +97,6 @@ class HealthCheck(BaseModel):
     version: str
     uptime: float
     database: bool
-    redis: bool
     openai: bool
     langsmith: bool
     timestamp: datetime

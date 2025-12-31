@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
 import hashlib
-import magic
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -30,7 +29,7 @@ class FileService:
         self.ensure_directories()
     
     def ensure_directories(self):
-        """Ensure required directories exist."""
+        """ Ensure required directories exist."""
         self.upload_path.mkdir(parents=True, exist_ok=True)
         self.processed_path.mkdir(parents=True, exist_ok=True)
     

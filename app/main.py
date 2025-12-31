@@ -17,11 +17,11 @@ from app.utils.logging import setup_langsmith, get_logger
 
 logger = get_logger(__name__)
 
-# Version
+# Application Version
 __version__ = "1.0.0"
 
 
-@asynccontextmanager
+@asynccontextmanager 
 async def lifespan(app: FastAPI):
     """Lifespan events."""
     # Startup
@@ -124,5 +124,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         reload=settings.DEBUG,
-        log_level=settings.LOG_LEVEL.lower()
+        
     )

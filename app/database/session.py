@@ -4,8 +4,6 @@ Database session management using SQLModel.
 from typing import Generator
 from sqlmodel import SQLModel, create_engine, Session
 from sqlmodel.pool import QueuePool
-from redis import Redis
-import redis
 
 from app.core.config import settings
 
@@ -20,16 +18,6 @@ engine = create_engine(
     pool_size=20,               # Number of connections in pool
     max_overflow=30,            # Extra connections allowed beyond pool_size
     poolclass=QueuePool         # Use QueuePool (default in SQLModel/SQLAlchemy)
-)
-
-# -------------------------
-# Redis Setup
-# -------------------------
-redis_client: Redis = redis.from_url(
-    settings.REDIS_URL,         # Redis URL from settings
-    decode_responses=True,      # Decode Redis responses to string automatically
-    socket_connect_timeout=5,   # Timeout in seconds for connecting to Redis
-    retry_on_timeout=True       # Retry if Redis times out
 )
 
 # -------------------------
@@ -48,20 +36,13 @@ def get_db() -> Generator[Session, None, None]:
         db.close()        # Ensure session is closed after use
 
 # -------------------------
-# Redis Dependency
-# -------------------------
-def get_redis() -> Redis:
-    """Return the Redis client instance."""
-    return redis_client
-
-# -------------------------
 # Initialize Database
 # -------------------------
 def init_db():
     """
     Initialize the database by creating all tables defined in SQLModel models.
     """
-    from app.models.database import *  # Import all SQLModel models
+    from app.models.database import MemoryDecisionDB, AgentSessionDB  # Import specific models
     SQLModel.metadata.create_all(bind=engine)
 
 # -------------------------

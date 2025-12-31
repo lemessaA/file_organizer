@@ -10,7 +10,7 @@ import json
 class Settings(BaseSettings):
     """Application settings."""
     
-    #API
+    #API  
     APP_NAME: str = "fILE Organizer Agent"
     APP_ENV: str = "development"
     DEBUG:bool = False
@@ -26,7 +26,6 @@ class Settings(BaseSettings):
     
     # Database
     DATABASE_URL: str = Field(default="postgresql://posstgres:qaws@localhost:5432/file_db")
-    REDIS_URL: str = Field(default="redis://localhost:6379/0")
     
     # File System 
     BASE_DIR: str = "/app" # base directory for the application(inside Docker or local)
@@ -70,12 +69,6 @@ class Settings(BaseSettings):
                 "Other": []
             }
             
-# REDIS MEMORY SETTINGS
-
-# Time-To-Live for memory entries in redis (seconds)
-
-MEMORY_TTL: int = 86400 # =24 hours
-
 # MONITORING & HEALTH 
 
 # port where matrics (prometheus, etc.) are exposed

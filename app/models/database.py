@@ -38,7 +38,7 @@ class AgentSessionDB(SQLModel, table=True):
 
 
 class MemoryDecisionDB(SQLModel, table=True):
-    """Database model for memory decisions."""
+    """ Database model for memory decisions."""
     id: Optional[int] = Field(default=None, primary_key=True)
     filename: str = Field(nullable=False, max_length=500, index=True)
     original_path: str = Field(nullable=False)

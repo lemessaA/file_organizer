@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 import uuid
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint import MemorySaver
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import tools_condition
 
 from app.agents.state import AgentState, AgentPhase, ObservationState, ReasoningState, DecisionState, ActionState, MemoryState

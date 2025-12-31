@@ -15,11 +15,9 @@ langchain-community>=0.0.10
 sqlalchemy>=2.0.23
 alembic>=1.13.0
 psycopg2-binary>=2.9.9
-redis>=5.0.0
 
 # File Operations
 watchdog>=3.0.0
-python-magic>=0.4.27
 filetype>=1.2.0
 
 # Utilities

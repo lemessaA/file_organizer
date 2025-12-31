@@ -1,26 +1,20 @@
-""" Logging and Langsmith setup for AI agent observability """
+""" Logging setup for AI agent """
 
 
 import logging
 from typing import Optional
 import os
 from datetime import datetime
-from langsmith import Client
-from langchain.callbacks.tracers import langChainTracer
-from langchain.callbacks.manager import collect_runs
 from app.core.config import settings
 
 
-def setup_langsmith() -> Optional[langChainTracer]:
-    
+def setup_langsmith() -> Optional[str]:
     """
     Setup langsmith for observability.
     
-    -Checks if langsmith API KEY and tracing are enabled in settings.
-    - Initializes a LangSmith client and tracer for tracking AI agent operations.
-    - returns LangChainTracer object if seccessful otherwise None.
+    Returns:
+        Tracer object or None if not configured
     """
-    
     if not settings.LANGSMITH_API_KEY or not settings.LANGSMITH_TRACING:
         return None
     

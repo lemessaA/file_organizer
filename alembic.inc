@@ -4,7 +4,7 @@ prepend_sys_path = .
 version_path_separator = os
 
 [sqlalchemy]
-url = postgresql://postgres:postgres@localhost:5432/file_organizer
+url = postgresql://postgres:qaws@localhost:5432/file_db
 
 [loggers]
 keys = root,sqlalchemy,alembic

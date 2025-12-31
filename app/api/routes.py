@@ -9,7 +9,6 @@ import uuid
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query, Depends
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
-import redis
 
 from app.api.models import (
     OrganizeRequest, OrganizeResponse, SessionStatus, SessionResult,
@@ -17,7 +16,7 @@ from app.api.models import (
     AgentStatus
 )
 from app.agents.file_organizer import FileOrganizerAgent
-from app.database.session import get_db, get_redis
+from app.database.session import get_db
 from app.models.database import AgentSessionDB
 from app.services.memory_service import MemoryService
 from app.core.config import settings
@@ -25,83 +24,81 @@ from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
+#All endpoints in this file will  be prfixed with whatever prefix this router gets mounted with
 router = APIRouter()
 
 # Global agent instance
+#This is a singleton pattern; all requests will use the same agent instance
 agent = FileOrganizerAgent()
+# Maps session_id -> asyncio.Task object for each running agent session
 active_sessions: Dict[str, asyncio.Task] = {}
 
-
+# Returns HealthCheck model (automatically serilized to JSON)
 @router.get("/health", response_model=HealthCheck)
 async def health_check(
-    db: Session = Depends(get_db),
-    redis_client: redis.Redis = Depends(get_redis)
+    db: Session = Depends(get_db) # inject database session using dependency
 ):
     """Health check endpoint."""
-    from app import __version__
+    from app import __version__   # the application version
     
-    # Check database
+    # Check database connectivity
     db_ok = False
     try:
-        db.execute("SELECT 1")
+        db.execute("SELECT 1") # Simple query to test database connection
         db_ok = True
     except Exception:
         pass
     
-    # Check Redis
-    redis_ok = False
-    try:
-        redis_client.ping()
-        redis_ok = True
-    except Exception:
-        pass
-    
-    # Check OpenAI
+    # Check OpenAI API KEY Availability
     openai_ok = bool(settings.OPENAI_API_KEY)
     
-    # Check LangSmith
+    # Check LangSmith API KEY Availability 
     langsmith_ok = bool(settings.LANGSMITH_API_KEY)
     
+    # Return HealthCheck model with all status information
     return HealthCheck(
-        status="healthy" if all([db_ok, redis_ok]) else "degraded",
+        status="healthy" if db_ok else "degraded",
         version=__version__,
         uptime=0.0,  # Would need to track startup time
         database=db_ok,
-        redis=redis_ok,
         openai=openai_ok,
         langsmith=langsmith_ok,
         timestamp=datetime.now()
     )
 
-
+# Accepts OrganizeRequest model, returns OranizaResponse model
 @router.post("/organize", response_model=OrganizeResponse)
 async def organize_directory(
     request: OrganizeRequest,
-    background_tasks: BackgroundTasks,
+    background_tasks: BackgroundTasks,# fastapi utility for running tasks in background
     db: Session = Depends(get_db)
 ):
     """Start organizing a directory."""
     # Validate directory exists
+    # Convert directory path string to path object for validation
     directory = Path(request.directory)
+    # then validate
     if not directory.exists():
         raise HTTPException(status_code=404, detail="Directory not found")
-    
+    # validate path is actually a directory (not file )
     if not directory.is_dir():
         raise HTTPException(status_code=400, detail="Path is not a directory")
     
-    # Create session record
+    # Generate uniquie ID  for tracking this organization job
     session_id = str(uuid.uuid4())
+
+    # Create db record for this session
     db_session = AgentSessionDB(
         session_id=session_id,
-        directory=str(directory),
+        directory=str(directory), # Convert path back to string for storage
         status=AgentStatus.PENDING,
-        dry_run=request.dry_run,
+        dry_run=request.dry_run, 
         use_llm=request.use_llm
     )
     db.add(db_session)
     db.commit()
     
-    # Prepare config
+    # Prepare config directory from request parameters
     config = {
         "dry_run": request.dry_run,
         "recursive": request.recursive,
@@ -111,25 +108,26 @@ async def organize_directory(
         "categories_filter": request.categories_filter
     }
     
-    # Start agent in background
+    # Start agent execution to  background tasks
     background_tasks.add_task(
-        run_agent_session,
+        run_agent_session, # Function to in background 
         session_id,
         str(directory),
         config,
         db
     )
-    
+    # log start of the session
     logger.info(f"Started organization session {session_id} for {directory}")
     
     return OrganizeResponse(
-        session_id=session_id,
-        status=AgentStatus.PENDING,
-        message="Organization started",
+        session_id=session_id, # Generate session ID
+        status=AgentStatus.PENDING,   # current status
+        message="Organization started", # User-friendly messag
         estimated_time=60,  # Rough estimate
-        result_url=f"/api/sessions/{session_id}/result"
+        result_url=f"/api/sessions/{session_id}/result"  # Url to check results
     )
 
+# Background task function to run agent session
 
 async def run_agent_session(
     session_id: str,
@@ -424,6 +422,6 @@ async def get_metrics(
         error_rate=error_rate,
         avg_processing_time=avg_time,
         category_distribution=memory_stats["category_distribution"],
-        memory_usage={"redis": 0.0, "database": 0.0},  # Would need actual metrics
+        memory_usage={"database": 0.0},  # Would need actual metrics
         api_requests={"total": 0, "success": 0, "errors": 0}  # Would need tracking
     )

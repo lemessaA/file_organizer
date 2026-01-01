@@ -114,7 +114,7 @@ class AgentNodes:
                         state['reasoning'].reasoning = "No clear classification"
                         logger.info(f"Fallback classification for {current_file.name}: Other")
         
-        # Record classification
+        # Record classification: Store classificaton for audit trial 
         classification_record = {
             "filename": current_file.name,
             "category": state['reasoning'].category.value if state['reasoning'].category else None,

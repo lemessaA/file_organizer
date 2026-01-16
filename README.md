@@ -6,7 +6,7 @@ A production-ready file organization agent using LangGraph, LangChain, FastAPI, 
 
 - **Agentic Architecture**: Built with LangGraph for stateful agent workflows
 - **AI-Powered Classification**: Uses OpenAI GPT for intelligent file categorization
-- **Production Ready**: FastAPI backend with PostgreSQL, Redis, and Docker
+- **Production Ready**: FastAPI backend with PostgreSQL, and Docker
 - **Observability**: LangSmith integration for tracing and monitoring
 - **Memory System**: Learns from past decisions and can be corrected
 - **REST API**: Full-featured API for integration and automation

@@ -13,6 +13,7 @@ dependencies = [
     "langsmith>=0.0.66",
     "sqlalchemy>=2.0.23",
     "redis>=5.0.0",
+    "sqlmodel>=0.0.31",
 ]
 
 [project.optional-dependencies]

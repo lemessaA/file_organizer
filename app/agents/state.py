@@ -97,11 +97,11 @@ class AgentState(TypedDict):
     files_processed: int
     files_organized: int
     errors: int
-    categories_used: Annotated[Dict[str, int], operator.add]
-    decision_sources: Annotated[Dict[str, int], operator.add]
+    categories_used: Dict[str, int]
+    decision_sources: Dict[str, int]
     
     # Messages for LLM communication
-    messages: Annotated[List[Any], add_messages]
+    messages: List[Any]
     
     # Configuration
     config: Dict[str, Any]

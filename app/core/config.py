@@ -23,15 +23,16 @@ class Settings(BaseSettings):
     LANGSMITH_PROJECT:str = "file-organizer-agent"
     LANGSMITH_TRACING:bool = True
     OPENAI_API_KEY: str = Field(default="")
+    GROQ_API_KEY: str = Field(default="")
     
     
     # Database
-    DATABASE_URL: str = Field(default="postgresql://posstgres:qaws@localhost:5432/file_db")
+    DATABASE_URL: str = Field(default="sqlite:///./file_organizer.db")
     
     # File System 
-    BASE_DIR: str = "/app" # base directory for the application(inside Docker or local)
-    UPLOAD_DIR:str = "/app/processed" # upload directory where uploaded file are stored 
-    PROCESSED_DIR: str = "/app/processed" # Directory where upload processed files are removed
+    BASE_DIR: str = "/home/lemessa-ahmed/file_organizer" # base directory for the application(inside Docker or local)
+    UPLOAD_DIR:str = "/home/lemessa-ahmed/file_organizer/uploads" # upload directory where uploaded file are stored 
+    PROCESSED_DIR: str = "/home/lemessa-ahmed/file_organizer/processed" # Directory where upload processed files are removed
     MAX_FILE_SIZE: int = 100*1024*1024  # 100MB
     
     #Agent Settings

@@ -2,7 +2,7 @@
 FastAPI routes for the File Organizer Agent.
 """
 import asyncio
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 from pathlib import Path
 import uuid

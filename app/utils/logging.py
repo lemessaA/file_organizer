@@ -7,22 +7,50 @@ from datetime import datetime
 from app.core.config import settings
 
 
-def setup_langsmith() -> Optional[str]:
+def setup_langsmith() -> Optional[object]:
     """
-    Setup langsmith for observability.
-    
+    Setup LangSmith tracing if available and configured.
+
     Returns:
-        Tracer object or None if not configured
+        A LangChain/LangSmith tracer instance or None if not configured/available.
     """
     if not settings.LANGSMITH_API_KEY or not settings.LANGSMITH_TRACING:
         return None
-    
+
     try:
-        # For now, just return a placeholder
-        # TODO: Implement proper LangSmith tracing when API stabilizes
-        return "langsmith_placeholder"
+        # Import lazily to avoid hard dependency failures
+        try:
+            from langsmith import Client as LangSmithClient
+        except Exception:
+            LangSmithClient = None
+
+        try:
+            from langchain.callbacks.tracers import LangSmithTracer
+            from langchain import tracing_v2
+        except Exception:
+            LangSmithTracer = None
+            tracing_v2 = None
+
+        if not LangSmithClient or not LangSmithTracer:
+            logging.getLogger(__name__).warning("LangSmith packages not installed; tracer disabled")
+            return None
+
+        client = LangSmithClient(api_key=settings.LANGSMITH_API_KEY)
+        tracer = LangSmithTracer(client=client, project=settings.LANGSMITH_PROJECT)
+
+        # Enable LangChain v2 tracing if available
+        if tracing_v2 is not None:
+            try:
+                tracing_v2.set_tracing_enabled(True)
+            except Exception:
+                # Some langchain versions expose a different API; ignore failures
+                pass
+
+        logging.getLogger(__name__).info("LangSmith tracer initialized")
+        return tracer
+
     except Exception as e:
-        logging.warning(f"Failed to setup LangSmith: {e}")
+        logging.getLogger(__name__).warning(f"Failed to setup LangSmith: {e}")
         return None
 
 

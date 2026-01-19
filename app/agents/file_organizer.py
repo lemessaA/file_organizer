@@ -209,39 +209,39 @@ class FileOrganizerAgent:
             "confidence_threshold": session_config.get("confidence_threshold", 0.7)
         }
         
-        return AgentState(
-            phase=AgentPhase.OBSERVE,
-            session_id=session_id,
-            directory=directory,
-            started_at=datetime.now(),
-            completed_at=None,
+        return {
+            "phase": AgentPhase.OBSERVE,
+            "session_id": session_id,
+            "directory": directory,
+            "started_at": datetime.now(),
+            "completed_at": None,
             
-            observation=ObservationState(
+            "observation": ObservationState(
                 directory=directory,
                 recursive=config.get("recursive", True),
                 max_depth=config.get("max_depth")
             ),
             
-            reasoning=ReasoningState(
+            "reasoning": ReasoningState(
                 use_llm=config.get("use_llm", True),
                 confidence_threshold=config.get("confidence_threshold", 0.7)
             ),
             
-            decision=DecisionState(),
-            action=ActionState(dry_run=config.get("dry_run", False)),
-            memory=MemoryState(),
+            "decision": DecisionState(),
+            "action": ActionState(dry_run=config.get("dry_run", False)),
+            "memory": MemoryState(),
             
-            files_processed=0,
-            files_organized=0,
-            errors=0,
-            categories_used={},
-            decision_sources={},
+            "files_processed": 0,
+            "files_organized": 0,
+            "errors": 0,
+            "categories_used": {},
+            "decision_sources": {},
             
-            messages=[],
-            config=config,
-            result=None,
-            error=None
-        )
+            "messages": [],
+            "config": config,
+            "result": None,
+            "error": None
+        }
     
     async def run(self, directory: str, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """

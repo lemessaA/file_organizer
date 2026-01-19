@@ -11,6 +11,7 @@ from datetime import datetime
 import hashlib
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+import asyncio
 
 from app.core.config import settings
 from app.models.schemas import FileMetadata
@@ -30,8 +31,19 @@ class FileService:
     
     def ensure_directories(self):
         """ Ensure required directories exist."""
-        self.upload_path.mkdir(parents=True, exist_ok=True)
-        self.processed_path.mkdir(parents=True, exist_ok=True)
+        try:
+            # If an event loop is running (e.g., during ASGI request handling),
+            # schedule the blocking mkdir calls in a thread to avoid blocking
+            # the event loop. This prevents Blockbuster from raising on langgraph dev.
+            loop = asyncio.get_running_loop()
+            loop.run_in_executor(None, lambda: self.upload_path.mkdir(parents=True, exist_ok=True))
+            loop.run_in_executor(None, lambda: self.processed_path.mkdir(parents=True, exist_ok=True))
+        except RuntimeError:
+            # No running loop; safe to call synchronously (e.g., during CLI runs)
+            self.upload_path.mkdir(parents=True, exist_ok=True)
+            self.processed_path.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            logger.warning(f"Failed to ensure directories asynchronously: {e}")
     
     def scan_directory(
         self, 
